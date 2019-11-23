@@ -29,13 +29,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-static struct lcd_driver_t {                                // LCD driver module structure
-//  uint8_t bitmap_array[LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES]; // LCD bitmap array
-//  uint8_t vcom_bit;                                         // vcom bit must be toggled to keep LCD running
-//  uint8_t lineAddress;                                      // line to write
-  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];               // spi tx buffer
-//  uint8_t isTxRunning_flag;                                 // tx running flag
-} lcd_driver;
+static struct lcd_driver_mod_t {                                    // LCD driver module structure
+//  uint8_t bitmap_array[LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES];   // LCD bitmap array
+//  uint8_t vcom_bit;                                           // vcom bit must be toggled to keep LCD running
+//  uint8_t lineAddress;                                        // line to write
+  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];                 // spi tx buffer
+//  uint8_t isTxRunning_flag;                                   // tx running flag
+} lcd_driver_mod;
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,7 +84,7 @@ static void init_spi_dma( void ){
                         LL_DMA_DIRECTION_MEMORY_TO_PERIPH | LL_DMA_PRIORITY_MEDIUM | LL_DMA_MODE_NORMAL |
                         LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT |
                         LL_DMA_PDATAALIGN_BYTE | LL_DMA_MDATAALIGN_BYTE);
-  LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3, (uint32_t)lcd_driver.tx_buf, LL_SPI_DMA_GetRegAddr(SPI1),
+  LL_DMA_ConfigAddresses(DMA1, LL_DMA_CHANNEL_3, (uint32_t)lcd_driver_mod.tx_buf, LL_SPI_DMA_GetRegAddr(SPI1),
                          LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_3));
   LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_3, LL_DMA_REQUEST_1);
 
