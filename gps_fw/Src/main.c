@@ -27,6 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "../Modules/Lcd/lcd_driver.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,6 +101,8 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
+  lcd_driver_init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -105,10 +110,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  LL_mDelay(100);
-	  LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
-	  LL_mDelay(100);
-	  LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
+      lcd_driver_process();
 
     /* USER CODE BEGIN 3 */
   }
