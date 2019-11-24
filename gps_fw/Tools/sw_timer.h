@@ -29,18 +29,24 @@
 
 /* Public typedef ------------------------------------------------------------*/
 
-typedef void (*sw_timer_callback_func_ptr_t)(void); // timer callback function
+typedef enum {
+    SW_TIMER_STATE_STOPPED,
+    SW_TIMER_STATE_RUNNING
+} sw_timer_state_t;
 
 typedef enum {
-    SINGLE,
-    CONTINUOUS
-} sw_timer_operation_mode_t;
+    SW_TIMER_MODE_SINGLE,
+    SW_TIMER_MODE_CONTINUOUS
+} sw_timer_mode_t;
+
+typedef void (*sw_timer_callback_func_ptr_t)(void); // timer callback function
 
 typedef struct{
+    sw_timer_state_t state;                     // timer stopped or running
     uint32_t interval_ms;                       // after this interval the callback function will be called [ms]
     uint32_t interval_start_time_ms;            // timestamp of interval start [ms]
     sw_timer_callback_func_ptr_t callback_func; // this is called after the period has passed
-    sw_timer_operation_mode_t mode;             // operation mode: single or continuous
+    sw_timer_mode_t mode;                       // operation mode: single or continuous
 } sw_timer_t;
 
 
@@ -53,20 +59,28 @@ typedef struct{
 void sw_timer_init( void );
 
 /**
- *  @brief Checks all timers in use to check if their intervals has expired
- *  Note: must be called continuously from main
+ * @brief Checks all timers in use to check if their intervals has expired
+ * Note: must be called continuously from main
  */
 void sw_timer_process( void );
 
 /**
  * @brief Timer constructor gets one of the available timers and initializes it.
+ *      The array sw_timer_t.timers[SW_TIMER_MAX_NUMBER_TIMERS] is used in order
+ *      to avoid use dynamic memory allocation
  *
- * @param interval_ms,   timer interval
- * @param callback_func, callback function that will be called after interval_ms
- * @param mode,          single or continuous mode
  * @return sw_timer_t *, pointer to a timer or NULL if no timers available
  */
-sw_timer_t *sw_timer_timer_ctr( uint32_t interval_ms, sw_timer_callback_func_ptr_t callback_func, sw_timer_operation_mode_t mode );
+sw_timer_t *sw_timer_timer_ctr( void );
+
+/**
+ * @brief Initializes the timer and sets it into running mode
+ * @param p_timer:          timer self-pointer
+ * @param interval_ms:      after this interval the callback function will be called [ms]
+ * @param callback_func:    callback function
+ * @param mode:             continuous or single
+ */
+void sw_timer_timer_start( sw_timer_t *p_timer, uint32_t interval_ms, sw_timer_callback_func_ptr_t callback_func, sw_timer_mode_t mode );
 
 
 #endif /* SW_TIMER_H_ */

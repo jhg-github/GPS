@@ -113,10 +113,8 @@ int main(void)
   sw_timer_init();
   lcd_driver_init();
 
-  p_timer1 = sw_timer_timer_ctr(100, timer1_callback, CONTINUOUS );
+  p_timer1 = sw_timer_timer_ctr();
   MY_ASSERT (NULL != p_timer1);
-  p_timer2 = sw_timer_timer_ctr(100, timer1_callback, CONTINUOUS );
-  MY_ASSERT (NULL != p_timer2);
 
   /* USER CODE END 2 */
 
