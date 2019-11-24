@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "../Modules/Lcd/lcd_driver.h"
+#include "../Tools/my_assert.h"
 #include "../Tools/sw_timer.h"
 
 
@@ -50,6 +51,13 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+sw_timer_t *p_timer1;
+sw_timer_t *p_timer2;
+
+void timer1_callback( void ){
+
+}
 
 /* USER CODE END PV */
 
@@ -104,6 +112,11 @@ int main(void)
 
   sw_timer_init();
   lcd_driver_init();
+
+  p_timer1 = sw_timer_timer_ctr(100, timer1_callback, CONTINUOUS );
+  MY_ASSERT (NULL != p_timer1);
+  p_timer2 = sw_timer_timer_ctr(100, timer1_callback, CONTINUOUS );
+  MY_ASSERT (NULL != p_timer2);
 
   /* USER CODE END 2 */
 

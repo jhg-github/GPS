@@ -59,7 +59,7 @@ void sw_timer_init( void );
 void sw_timer_process( void );
 
 /**
- * @brief Timer constructor
+ * @brief Timer constructor gets one of the available timers and initializes it.
  *
  * @param interval_ms,   timer interval
  * @param callback_func, callback function that will be called after interval_ms

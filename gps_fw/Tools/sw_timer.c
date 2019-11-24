@@ -16,6 +16,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "sw_timer.h"
+#include "../Tools/my_assert.h"
 
 
 /* Private variables ---------------------------------------------------------*/
@@ -49,7 +50,7 @@ void sw_timer_process( void ){
 }
 
 /**
- * @brief Timer constructor
+ * @brief Timer constructor gets one of the available timers and initializes it.
  *
  * @param interval_ms,   timer interval
  * @param callback_func, callback function that will be called after interval_ms
@@ -57,10 +58,16 @@ void sw_timer_process( void ){
  * @return sw_timer_t *, pointer to a timer or NULL if no timers available
  */
 sw_timer_t *sw_timer_timer_ctr( uint32_t interval_ms, sw_timer_callback_func_ptr_t callback_func, sw_timer_operation_mode_t mode ){
+    MY_ASSERT (NULL != callback_func);
+
     if( SW_TIMER_MAX_NUMBER_TIMERS <= sw_timer_mod.timers_used ){
         return NULL;
     }
     sw_timer_mod.timers_used++;
+    sw_timer_mod.timers[sw_timer_mod.timers_used-1].interval_start_time_ms = sw_timer_mod.time_ms;
+    sw_timer_mod.timers[sw_timer_mod.timers_used-1].interval_ms = interval_ms;
+    sw_timer_mod.timers[sw_timer_mod.timers_used-1].callback_func = callback_func;
+    sw_timer_mod.timers[sw_timer_mod.timers_used-1].mode = mode;
     return &sw_timer_mod.timers[sw_timer_mod.timers_used-1];
 }
 
@@ -72,8 +79,10 @@ sw_timer_t *sw_timer_timer_ctr( uint32_t interval_ms, sw_timer_callback_func_ptr
   */
 void SysTick_Handler(void) {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+
     sw_timer_mod.time_ms++;
-  /* USER CODE END SysTick_IRQn 0 */
+
+    /* USER CODE END SysTick_IRQn 0 */
 
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
