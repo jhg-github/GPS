@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "../Modules/Lcd/lcd_driver.h"
+#include "../Tools/sw_timer.h"
 
 
 /* USER CODE END Includes */
@@ -101,6 +102,7 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
+  sw_timer_init();
   lcd_driver_init();
 
   /* USER CODE END 2 */
@@ -109,8 +111,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      sw_timer_process();
     /* USER CODE END WHILE */
-      lcd_driver_process();
 
     /* USER CODE BEGIN 3 */
   }

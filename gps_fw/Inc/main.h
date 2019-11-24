@@ -58,6 +58,8 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+#define NULL ((void *)0)
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

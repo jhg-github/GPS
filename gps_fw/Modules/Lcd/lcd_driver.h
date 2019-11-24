@@ -23,14 +23,14 @@
 /* Public functions ----------------------------------------------------------*/
 
 /**
- * Initializes lcd driver module
+ *  @brief Initializes lcd driver module
  */
-extern void lcd_driver_init( void );
+void lcd_driver_init( void );
 
 /**
- * Executes the state machine in charge of refreshing the lcd
- * Note: must be called continuously from main
+ *  @brief Executes the state machine in charge of refreshing the lcd
+ *  Note: must be called continuously from main
  */
-extern void lcd_driver_process( void );
+void lcd_driver_process( void );
 
 #endif /* LCD_LCD_DRIVER_H_ */

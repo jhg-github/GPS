@@ -46,7 +46,7 @@ static void init_spi_dma( void );
 /* Public functions ----------------------------------------------------------*/
 
 /**
- * Initializes lcd driver module
+ *  @brief Initializes lcd driver module
  */
 void lcd_driver_init( void ){
     init_spi_dma();
@@ -54,8 +54,8 @@ void lcd_driver_init( void ){
 
 
 /**
- * Executes the state machine in charge of refreshing the lcd
- * Note: must be called continuously from main
+ *  @brief Executes the state machine in charge of refreshing the lcd
+ *  Note: must be called continuously from main
  */
 void lcd_driver_process( void ){
 
@@ -65,7 +65,7 @@ void lcd_driver_process( void ){
 /* Private functions ---------------------------------------------------------*/
 
 /**
- * Initializes SPI and SPI's DMA
+ *  @brief Initializes SPI and SPI's DMA
  */
 static void init_spi_dma( void ){
   // chip select
