@@ -59,7 +59,10 @@ typedef struct{
 void sw_timer_init( void );
 
 /**
- * @brief Checks all timers in use to check if their intervals has expired
+ * @brief Checks all timers in use to check if their intervals has expired.
+ *      If the timer runs in single mode, it will be stopped.
+ *      If the timer runs in continuous mode, the start time will be updated
+ *
  * Note: must be called continuously from main
  */
 void sw_timer_process( void );
