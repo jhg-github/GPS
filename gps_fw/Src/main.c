@@ -52,19 +52,6 @@
 
 /* USER CODE BEGIN PV */
 
-sw_timer_t *p_timer1;
-uint8_t toggle_led_flag = 1;
-
-void timer1_callback( void ){
-  if( toggle_led_flag ){
-    LL_GPIO_SetOutputPin( LD2_GPIO_Port, LD2_Pin );
-    toggle_led_flag = 0;
-  } else {
-    LL_GPIO_ResetOutputPin( LD2_GPIO_Port, LD2_Pin );
-    toggle_led_flag = 1;
-  }
-}
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,11 +105,6 @@ int main(void)
 
   sw_timer_init();
   lcd_driver_init();
-
-  p_timer1 = sw_timer_timer_ctr();
-  MY_ASSERT (NULL != p_timer1);
-  sw_timer_timer_start( p_timer1, 10, timer1_callback, SW_TIMER_MODE_CONTINUOUS );
-  //LL_GPIO_SetOutputPin( LD2_GPIO_Port, LD2_Pin );
 
   /* USER CODE END 2 */
 

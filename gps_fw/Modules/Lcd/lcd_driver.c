@@ -20,6 +20,7 @@
 
 #include "lcd_driver.h"
 #include "spi.h"
+#include "../../Tools/sw_timer.h"
 
 
 /* Private defines -----------------------------------------------------------*/
@@ -27,29 +28,61 @@
 #define LCD_DRIVER_TX_BUF_SIZE_BYTES    (20)    // size = address(1) + line(18) + trail(1)
 
 
+/* Private typedef -----------------------------------------------------------*/
+
+typedef enum {
+  REFRESH_LCD_ST_IDLE,
+  REFRESH_LCD_ST_SET_CS,
+  REFRESH_LCD_ST_SEND_CMD_ENTRY,
+  REFRESH_LCD_ST_SEND_CMD,
+  REFRESH_LCD_ST_SEND_LINE_ENTRY,
+  REFRESH_LCD_ST_SEND_LINE,
+  REFRESH_LCD_ST_SEND_TRAILER,
+} refresh_lcd_state_t;
+
+typedef enum {
+  TIMER_EXPIRED_NO,
+  TIMER_EXPIRED_YES
+} timer_expired_t;
+
+
+typedef struct {                    // refresh lcd state machine
+  refresh_lcd_state_t next_state;   // tate machine next state
+  sw_timer_t *p_timer;              // state machine timer
+  timer_expired_t is_timer_expired; // flag to check timer expired
+} refresh_lcd_state_machine_t;
+
+
 /* Private variables ---------------------------------------------------------*/
 
-static struct lcd_driver_mod_t {                                    // LCD driver module structure
+static struct lcd_driver_mod_t {                                // LCD driver module structure
 //  uint8_t bitmap_array[LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES];   // LCD bitmap array
 //  uint8_t vcom_bit;                                           // vcom bit must be toggled to keep LCD running
 //  uint8_t lineAddress;                                        // line to write
-  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];                 // spi tx buffer
 //  uint8_t isTxRunning_flag;                                   // tx running flag
+
+  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];                 // spi tx buffer
+  refresh_lcd_state_machine_t refres_lcd_state_machine;         // refresh lcd state machine
 } lcd_driver_mod;
 
 
 /* Private function prototypes -----------------------------------------------*/
 
 static void init_spi_dma( void );
+static void init_refresh_lcd_state_machine( void );
+static void refresh_lcd_state_machine( void );
 
 
 /* Public functions ----------------------------------------------------------*/
 
 /**
- *  @brief Initializes lcd driver module
+ *  @brief Initializes lcd driver module:
+ *        - DMA
+ *        - State machine
  */
 void lcd_driver_init( void ){
-    init_spi_dma();
+  init_spi_dma();
+  init_refresh_lcd_state_machine();
 }
 
 
@@ -58,7 +91,7 @@ void lcd_driver_init( void ){
  *  Note: must be called continuously from main
  */
 void lcd_driver_process( void ){
-
+  refresh_lcd_state_machine();
 }
 
 
@@ -90,4 +123,23 @@ static void init_spi_dma( void ){
 
   /* Enable SPI1 */
   LL_SPI_Enable(SPI1);
+}
+
+
+static void init_refresh_lcd_state_machine( void ){
+  lcd_driver_mod.refres_lcd_state_machine.next_state = REFRESH_LCD_ST_IDLE;
+  lcd_driver_mod.refres_lcd_state_machine.p_timer = sw_timer_timer_ctr();
+  MY_ASSERT (NULL != lcd_driver_mod.refres_lcd_state_machine.p_timer);
+  sw_timer_timer_start( lcd_driver_mod.refres_lcd_state_machine.p_timer, 10, timer1_callback, SW_TIMER_MODE_CONTINUOUS );
+}
+
+static void refresh_lcd_state_machine( void ){
+  switch( lcd_driver_mod.refresh_lcd_next_state ){
+  case REFRESH_LCD_ST_IDLE:
+    // output
+    LL_GPIO_ResetOutputPin(LCD_CS_GPIO_Port, LCD_CS_Pin);   // CS deassert
+
+    // next state
+    break;
+  }
 }
