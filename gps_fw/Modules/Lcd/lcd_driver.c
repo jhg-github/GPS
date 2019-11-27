@@ -70,6 +70,7 @@ static struct lcd_driver_mod_t {                                // LCD driver mo
 
 static void init_spi_dma( void );
 static void init_refresh_lcd_state_machine( void );
+static void refres_lcd_state_machine_timer_callback( void );
 static void refresh_lcd_state_machine( void );
 
 
@@ -126,11 +127,16 @@ static void init_spi_dma( void ){
 }
 
 
+static void refres_lcd_state_machine_timer_callback( void ){
+  lcd_driver_mod.refres_lcd_state_machine.is_timer_expired = TIMER_EXPIRED_YES;
+}
+
 static void init_refresh_lcd_state_machine( void ){
   lcd_driver_mod.refres_lcd_state_machine.next_state = REFRESH_LCD_ST_IDLE;
   lcd_driver_mod.refres_lcd_state_machine.p_timer = sw_timer_timer_ctr();
   MY_ASSERT (NULL != lcd_driver_mod.refres_lcd_state_machine.p_timer);
-  sw_timer_timer_start( lcd_driver_mod.refres_lcd_state_machine.p_timer, 10, timer1_callback, SW_TIMER_MODE_CONTINUOUS );
+  sw_timer_timer_start( lcd_driver_mod.refres_lcd_state_machine.p_timer, 500, refres_lcd_state_machine_timer_callback, SW_TIMER_MODE_CONTINUOUS );
+  lcd_driver_mod.refres_lcd_state_machine.is_timer_expired = TIMER_EXPIRED_NO;
 }
 
 static void refresh_lcd_state_machine( void ){
@@ -138,8 +144,11 @@ static void refresh_lcd_state_machine( void ){
   case REFRESH_LCD_ST_IDLE:
     // output
     LL_GPIO_ResetOutputPin(LCD_CS_GPIO_Port, LCD_CS_Pin);   // CS deassert
-
     // next state
+      if( TIMER_EXPIRED_YES == lcd_driver_mod.refres_lcd_state_machine.is_timer_expired ){
+        lcd_driver_mod.refres_lcd_state_machine.is_timer_expired = TIMER_EXPIRED_NO;
+        lcd_driver_mod.refresh_lcd_next_state = REFRESH_LCD_ST_SET_CS;
+      }
     break;
   }
 }
