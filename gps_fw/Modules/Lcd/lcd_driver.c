@@ -22,6 +22,7 @@
 #include "spi.h"
 #include "../../Tools/sw_timer.h"
 #include "../../Tools/my_assert.h"
+#include <string.h>
 
 
 /* Private defines -----------------------------------------------------------*/
@@ -32,6 +33,16 @@
 
 #define LCD_DRIVER_TX_BUF_SIZE_BYTES            (20)  // size = address(1) + line(18) + trail(1)
 #define LCD_DRIVER_TX_BUF_COMMAND_INDEX         (0)   // command index in buffer
+#define LCD_DRIVER_TX_BUF_LINE_N_INDEX          (0)   // line number index in buffer
+#define LCD_DRIVER_TX_BUF_LINE_DATA_INDEX       (1)   // line data index in buffer
+#define LCD_DRIVER_TX_BUF_LINE_TRAILER          (19)  // line trailer index in buffer
+#define LCD_DRIVER_TX_BUF_TRAILER_VALUE         (0)   // trailer value
+
+#define LCD_DRIVER_BITMAP_ARRAY_N_LINES         (168)
+#define LCD_DRIVER_BITMAP_ARRAY_N_COLUMNS       (144)
+#define LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES      (LCD_DRIVER_BITMAP_ARRAY_N_LINES*LCD_DRIVER_BITMAP_ARRAY_N_COLUMNS/8)   // 144 x 168 / 8
+#define LCD_DRIVER_BITMAP_ARRAY_LINE_SIZE_BYTES (LCD_DRIVER_BITMAP_ARRAY_N_COLUMNS/8)                                   // 144 / 8
+
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,19 +80,16 @@ typedef struct {                    // refresh lcd state machine
   timer_expired_t is_timer_expired; // flag to signal timer expired
   tx_complete_t is_tx_complete;     // flag to signal dma transfer complete
   uint8_t vcom_bit;                 // vcom bit must be toggled to keep LCD running
+  uint8_t line_number;              // number of line to write
 } refresh_lcd_stmachine_t;
 
 
 /* Private variables ---------------------------------------------------------*/
 
-static struct lcd_driver_mod_t {                                // LCD driver module structure
-//  uint8_t bitmap_array[LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES];   // LCD bitmap array
-
-//  uint8_t lineAddress;                                        // line to write
-//  uint8_t isTxRunning_flag;                                   // tx running flag
-
-  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];                 // spi tx buffer
-  refresh_lcd_stmachine_t refres_lcd_stmachine;         // refresh lcd state machine
+static struct lcd_driver_mod_t {                              // LCD driver module structure
+  uint8_t tx_buf[LCD_DRIVER_TX_BUF_SIZE_BYTES];               // spi tx buffer
+  refresh_lcd_stmachine_t refres_lcd_stmachine;               // refresh lcd state machine
+  uint8_t bitmap_array[LCD_DRIVER_BITMAP_ARRAY_SIZE_BYTES];   // LCD bitmap array
 } lcd_driver_mod;
 
 
@@ -195,6 +203,7 @@ static void refresh_lcd_stmachine( void ){
     lcd_driver_mod.refres_lcd_stmachine.vcom_bit ^= 1UL << LCD_DRIVER_STMACHINE_VCOM_BIT;   // toggle VCOM
     command = COMMAND_WRITE | lcd_driver_mod.refres_lcd_stmachine.vcom_bit;
     lcd_driver_mod.tx_buf[LCD_DRIVER_TX_BUF_COMMAND_INDEX] = command;
+    lcd_driver_mod.refres_lcd_stmachine.line_number = 0;                                    // line to write
     lcd_driver_mod.refres_lcd_stmachine.is_tx_complete = TX_COMPLETE_NO;
     LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, 1);                                        // star Tx with DMA
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
@@ -208,19 +217,28 @@ static void refresh_lcd_stmachine( void ){
       lcd_driver_mod.refres_lcd_stmachine.next_state = REFRESH_LCD_ST_IDLE;
     }
     break;
+  case REFRESH_LCD_ST_SEND_LINE_ENTRY:
+    // output
+    lcd_driver_mod.tx_buf[LCD_DRIVER_TX_BUF_LINE_N_INDEX] = lcd_driver_mod.refres_lcd_stmachine.line_number + 1;
+    memcpy( &lcd_driver_mod.tx_buf[LCD_DRIVER_TX_BUF_LINE_DATA_INDEX], (uint8_t *)&lcd_driver_mod.bitmap_array[lcd_driver_mod.refres_lcd_stmachine.line_number*LCD_DRIVER_BITMAP_ARRAY_LINE_SIZE_BYTES],  LCD_DRIVER_BITMAP_ARRAY_LINE_SIZE_BYTES);
+    lcd_driver_mod.tx_buf[LCD_DRIVER_TX_BUF_LINE_TRAILER] = LCD_DRIVER_TX_BUF_TRAILER_VALUE;
+    lcd_driver_mod.refres_lcd_stmachine.line_number++;
+    // next state
+    break;
   }
 }
 
 
 /**
   * @brief This function handles DMA1 channel 2 and channel 3 interrupts.
+  *         Clear interrupt flags and set lcd_driver transfer complete flag
   */
 void DMA1_Channel2_3_IRQHandler(void) {
   if (LL_DMA_IsActiveFlag_TC3(DMA1)) {
     LL_DMA_ClearFlag_GI3(DMA1);
-    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);  // Disable DMA1 Tx Channel
+    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
     lcd_driver_mod.refres_lcd_stmachine.is_tx_complete = TX_COMPLETE_YES;
   } else if (LL_DMA_IsActiveFlag_TE3(DMA1)) {
-    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);  // Disable DMA1 Tx Channel
+    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
   }
 }
